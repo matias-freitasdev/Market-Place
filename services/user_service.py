@@ -52,5 +52,3 @@ class UserService:
 
     def delete_user(self, id: int):
         return self.user_repository.delete_user(id)
-
-        

@@ -1,12 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, Request, status
 
 from core.limiter import limiter
-from database.session import get_session
-from repositories.user_repository import UserRepository
-from schemas.user import CreateUser
+from schemas.user import CreateUser, UserRead
 from services.user_service import UserService
-
+from dependencies.user_deps import get_user_service
 
 router = APIRouter(
     prefix="/users",
@@ -15,35 +12,23 @@ router = APIRouter(
 )
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserRead)
 @limiter.limit("5/minutes")
-def create_user(request: Request, user: CreateUser, db: Session = Depends(get_session)):
-    repository = UserRepository(db)
-    service = UserService(repository)
-
-    try:
-        return service.create_user(user)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        ) from exc
+def create_user(
+    request: Request, 
+    user: CreateUser, 
+    service: UserService = Depends(get_user_service)
+):
+    
+    return service.create_user(user)
 
 
-@router.get("/{user_id}")
+@router.get("/{user_id}", response_model=UserRead)
 @limiter.limit("10/minute")
 def read_user(
     request: Request,
     user_id: int,
-    db: Session = Depends(get_session),
+    service: UserService = Depends(get_user_service),
 ):
-    repository = UserRepository(db)
-    service = UserService(repository)
-
-    try:
-        return service.get_user_by_id(user_id)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(exc),
-        ) from exc
+   
+    return service.get_user_by_id(user_id)
