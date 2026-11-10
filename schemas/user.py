@@ -15,3 +15,5 @@ class loginUser(BaseModel):
 class UserRead(BaseModel):
     username: str
 
+class DeletUser(BaseModel):
+    id: int
