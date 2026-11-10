@@ -26,6 +26,16 @@ def create_product(
     return service.create_product(product, user_id=current_user.id)
 
 
+@router.get("/my-products", response_model=List[ProductRead])
+@limiter.limit("5/minutes")
+def list_products_by_user(
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    service: ProductService = Depends(get_product_service)
+):
+    return service.list_products_by_user(current_user.id)
+
+
 @router.get("/{product_id}", response_model=ProductRead)
 @limiter.limit("5/minutes")
 def get_product_by_id(
@@ -34,17 +44,7 @@ def get_product_by_id(
     service: ProductService = Depends(get_product_service),
     current_user: User = Depends(get_current_active_user)
 ):
-    return service.get_user_by_id(product_id)
-
-
-@router.get("/my-products", response_model=List[ProductRead])
-@limiter.limit("5/minutes")
-def list_products_by_user(
-    request: Request,
-    current_user: User = Depends(get_current_active_user),
-    service: ProductService = Depends(get_product_service)
-):
-    return service.get_user_products(current_user.id)
+    return service.get_product_by_id(product_id)
 
 
 @router.get("/search/{product_name}", response_model=List[ProductRead])
