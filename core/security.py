@@ -5,13 +5,13 @@ import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHash, VerifyMismatchError
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 
 from core.config import settings
 
 ph = PasswordHasher()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+bearer_scheme = HTTPBearer()
 
 
 def hash_password(password: str) -> str:
@@ -59,8 +59,9 @@ def verify_access_token(token: str) -> dict[str, Any]:
     return payload
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> dict[str, Any]:
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> dict[str, Any]:
     try:
+        token = credentials.credentials
         return verify_access_token(token)
     except ValueError as exc:
         raise HTTPException(

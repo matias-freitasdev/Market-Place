@@ -45,6 +45,18 @@ class ProductRepository:
             
             raise ValueError("Failure to save the product in the database.") from e
 
+    def update_stock(self, product_id: int, new_stock: int) -> Product:
+        product = self.get_product_by_id(product_id)
+        product.stock = new_stock
+
+        try:
+            self.session.commit()
+            self.session.refresh(product)
+            return product
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise ValueError("Failure to update product stock.") from e
+
     def delete_product(self, product_id: int, user_id: int) -> dict:
         statement = select(Product).where(
             Product.id == product_id,
